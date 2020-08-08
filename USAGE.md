@@ -36,6 +36,7 @@ This document provides an extensive guide on how to install and use ProtonVPN-CL
     - [Disable sudo password query](#disable-sudo-password-query)
     - [Configure alias for quicker access](#configure-alias-for-quicker-access)
     - [Auto-connect on boot](#auto-connect-on-boot)
+      - [Via OpenRC Service](#via-openrc-service)
       - [via Systemd Service](#via-systemd-service)
 
 ## Installation & Updating
@@ -455,13 +456,59 @@ This lets you use ProtonVPN-CLI by simply typing `protonvpn` without sudo or jus
 
 ### Auto-connect on boot
 
-#### via Systemd Service
-
-Systemd is the current init system of most major Linux distributions. This guide shows you how to use systemd to automatically connect to a ProtonVPN Server when you boot up your system.
-
 1. Find the location of the executable with `sudo which protonvpn`
 
    ![which-protonvpn](resources/images/usage-which-protonvpn.png)
+
+#### via OpenRC Service
+
+2. Initialize the VPN for your root user
+
+3. Create the unit file in `/etc/init.d/protonvpn-autoconnect`
+
+    `sudo nano /etc/init.d/protonvpn-autoconnect`
+    
+4. Add the following content to this file (with the proper path to `protonvpn`)
+
+    ```sh
+    #!/sbin/openrc-run
+
+    description="Connect to the fastest ProtonVPN server."
+
+    depend() {
+        need net
+    }
+
+    start() {
+        /usr/local/bin/protonvpn c -f
+    }
+
+    status() {
+        /usr/local/bin/protonvpn s
+    }
+
+    stop() {
+        /usr/local/bin/protonvpn d
+    }
+
+    restart() {
+        /usr/local/bin/protonvpn c -f
+    }
+    ```
+    
+    If you want another connect command than fastest as used in this example, just replace `-f` with what you personally prefer.
+
+5. Set the init script to executable
+
+     `sudo chmod +x /etc/init.d/protonvpn-autoconnect`
+
+6. Add the service to the default runlevel
+
+     `sudo rc-update add protonvpn-autoconnect default`
+
+#### via Systemd Service
+
+Systemd is the current init system of most major Linux distributions. This guide shows you how to use systemd to automatically connect to a ProtonVPN Server when you boot up your system.
 
 2. Create the unit file in `/etc/systemd/system`
 
